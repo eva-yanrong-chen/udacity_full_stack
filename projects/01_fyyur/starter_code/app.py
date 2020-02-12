@@ -41,16 +41,16 @@ class Venue(db.Model):
     __tablename__ = 'venue'
 
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String)
-    city = db.Column(db.String(120))
-    state = db.Column(db.String(120))
-    address = db.Column(db.String(120))
+    name = db.Column(db.String, nullable=False)
+    city = db.Column(db.String(120), nullable=False)
+    state = db.Column(db.String(120), nullable=False)
+    address = db.Column(db.String(120), nullable=False)
     phone = db.Column(db.String(120))
     image_link = db.Column(db.String(500))
     facebook_link = db.Column(db.String(120))
-    genres = db.Column(db.ARRAY(db.String))
+    genres = db.Column(db.ARRAY(db.String), nullable=False)
     website = db.Column(db.String(500))
-    seeking_talent = db.Column(db.Boolean)
+    seeking_talent = db.Column(db.Boolean, nullable=False)
     seeking_description = db.Column(db.String())
     artists = db.relationship('Artist', secondary=show,
                               backref=db.backref('venues'))
@@ -60,15 +60,15 @@ class Artist(db.Model):
     __tablename__ = 'artist'
 
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String)
-    city = db.Column(db.String(120))
-    state = db.Column(db.String(120))
+    name = db.Column(db.String, nullable=False)
+    city = db.Column(db.String(120), nullable=False)
+    state = db.Column(db.String(120), nullable=False)
     phone = db.Column(db.String(120))
-    genres = db.Column(db.ARRAY(db.String))
+    genres = db.Column(db.ARRAY(db.String), nullable=False)
     image_link = db.Column(db.String(500))
     facebook_link = db.Column(db.String(120))
     website = db.Column(db.String(500))
-    seeking_venue = db.Column(db.Boolean)
+    seeking_venue = db.Column(db.Boolean, nullable=False)
     seeking_description = db.Column(db.String())
 
 
@@ -245,12 +245,42 @@ def create_venue_submission():
     # TODO: insert form data as a new Venue record in the db, instead
     # TODO: modify data to be the data object returned from db insertion
 
-    # on successful db insert, flash success
-    flash('Venue ' + request.form['name'] + ' was successfully listed!')
-    # TODO: on unsuccessful db insert, flash an error instead.
-    # e.g., flash('An error occurred. Venue ' + data.name + ' could not be listed.')
-    # see: http://flask.pocoo.org/docs/1.0/patterns/flashing/
-    return render_template('pages/home.html')
+    form = VenueForm(request.form)
+    error = False
+
+    if form.validate():
+        try:
+            newVenue = Venue(
+                name=request.form['name'],
+                city=request.form['city'],
+                state=request.form['state'],
+                address=request.form['address'],
+                phone=request.form['phone'],
+                genres=request.form['genres'],
+                image_link=request.form['image_link'],
+                facebook_link=request.form['facebook_link'],
+                website=request.form['website'],
+                seeking_talent=request.form['seeking_talent'] == 'Yes',
+                seeking_description=request.form['seeking_description']
+            )
+            db.session.add(newVenue)
+            db.session.commit()
+            flash('Venue ' + request.form['name'] + ' has been created!')
+        except SQLAlchemyError as e:
+            error = True
+            db.rollback()
+        finally:
+            db.session.close()
+        if error:
+            flash('An ' + e + ' error occurred. Venue ' +
+                  data.name + ' could not be listed.')
+            return render_template('forms/new_venue.html', form=form)
+        else:
+            return render_template('pages/home.html')
+    else:
+        flash('Venue' + request.form['name' +
+                                     ' cannot be list. Please double check the fields.'])
+        return render_template('forms/new_venue.html', form=form)
 
 
 @app.route('/venues/<venue_id>', methods=['DELETE'])
