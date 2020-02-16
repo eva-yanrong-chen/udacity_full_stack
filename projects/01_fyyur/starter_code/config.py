@@ -11,3 +11,6 @@ DEBUG = True
 
 # IMPLEMENT DATABASE URL
 SQLALCHEMY_DATABASE_URI = 'postgres://gogumalatte@localhost:5432/fyyur'
+
+# Disable CSRF checks in all views
+WTF_CSRF_ENABLED = False

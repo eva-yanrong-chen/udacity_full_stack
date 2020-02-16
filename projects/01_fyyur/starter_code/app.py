@@ -13,6 +13,7 @@ from logging import Formatter, FileHandler
 from flask_wtf import Form
 from forms import *
 from flask_migrate import Migrate
+from datetime import datetime
 #----------------------------------------------------------------------------#
 # App Config.
 #----------------------------------------------------------------------------#
@@ -27,14 +28,13 @@ migrate = Migrate(app, db)
 #----------------------------------------------------------------------------#
 # Models.
 #----------------------------------------------------------------------------#
-show = db.Table('show',
-                db.Column('venue_id', db.Integer, db.ForeignKey(
-                    'venue.id'), primary_key=True),
-                db.Column('artist_id', db.Integer, db.ForeignKey(
-                    'artist.id'), primary_key=True),
-                db.Column('start_time', db.DateTime, nullable=False,
-                          default=datetime.utcnow)
-                )
+
+class Show(db.Model):
+    __tablename__ = 'show'
+
+    venue_id = db.Column(db.Integer, db.ForeignKey('venue.id'), primary_key=True)
+    artist_id = db.Column(db.Integer, db.ForeignKey('artist.id'), primary_key=True)
+    start_time = db.Column(db.DateTime, nullable=False, default=datetime.now)
 
 
 class Venue(db.Model):
@@ -52,7 +52,7 @@ class Venue(db.Model):
     website = db.Column(db.String(500))
     seeking_talent = db.Column(db.Boolean, nullable=False)
     seeking_description = db.Column(db.String())
-    artists = db.relationship('Artist', secondary=show,
+    artists = db.relationship('Artist', secondary="show",
                               backref=db.backref('venues'))
 
 
@@ -260,11 +260,10 @@ def create_venue_submission():
                 seeking_talent=request.form['seeking_talent'] == 'Yes',
                 seeking_description=request.form['seeking_description']
             )
-            print(newVenue.genres)
             db.session.add(newVenue)
             db.session.commit()
             flash('Venue ' + request.form['name'] + ' has been created!')
-        except SQLAlchemyError as e:
+        except:
             error = True
             db.session.rollback()
         finally:
@@ -567,16 +566,37 @@ def create_shows():
 
 @app.route('/shows/create', methods=['POST'])
 def create_show_submission():
-    # called to create new shows in the db, upon submitting new show listing form
-    # TODO: insert form data as a new Show record in the db, instead
+    form = ShowForm(request.form)
+    error = False
 
-    # on successful db insert, flash success
-    flash('Show was successfully listed!')
-    # TODO: on unsuccessful db insert, flash an error instead.
-    # e.g., flash('An error occurred. Show could not be listed.')
-    # see: http://flask.pocoo.org/docs/1.0/patterns/flashing/
-    return render_template('pages/home.html')
-
+    if form.validate():
+        try:
+            start_time_string = request.form['start_time']
+            newShow = Show(
+                venue_id = request.form['venue_id'],
+                artist_id = request.form['artist_id'],
+                start_time=datetime.strptime(
+                    start_time_string, '%Y-%m-%d %H:%M:%S')
+            )
+            db.session.add(newShow)
+            db.session.commit()
+            flash('Show was successfully listed!')
+        except RuntimeError as e:
+            print(e)
+            error = True
+            db.session.rollback()
+        finally:
+            db.session.close()
+        if error:
+            flash('An error occurred. Show could not be listed.')
+            return render_template('forms/new_show.html', form=form)
+        else:
+            return render_template('pages/home.html')
+    else:
+        print(form.errors)
+        flash('Show cannot be listed. Please check all the fields.')
+        return render_template('forms/new_show.html', form=form)
+    
 
 @app.errorhandler(404)
 def not_found_error(error):
