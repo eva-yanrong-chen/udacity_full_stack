@@ -242,9 +242,6 @@ def create_venue_form():
 
 @app.route('/venues/create', methods=['POST'])
 def create_venue_submission():
-    # TODO: insert form data as a new Venue record in the db, instead
-    # TODO: modify data to be the data object returned from db insertion
-
     form = VenueForm(request.form)
     error = False
 
@@ -256,19 +253,20 @@ def create_venue_submission():
                 state=request.form['state'],
                 address=request.form['address'],
                 phone=request.form['phone'],
-                genres=request.form['genres'],
+                genres=request.form.getlist('genres'),
                 image_link=request.form['image_link'],
                 facebook_link=request.form['facebook_link'],
                 website=request.form['website'],
                 seeking_talent=request.form['seeking_talent'] == 'Yes',
                 seeking_description=request.form['seeking_description']
             )
+            print(newVenue.genres)
             db.session.add(newVenue)
             db.session.commit()
             flash('Venue ' + request.form['name'] + ' has been created!')
         except SQLAlchemyError as e:
             error = True
-            db.rollback()
+            db.session.rollback()
         finally:
             db.session.close()
         if error:
@@ -278,8 +276,8 @@ def create_venue_submission():
         else:
             return render_template('pages/home.html')
     else:
-        flash('Venue' + request.form['name' +
-                                     ' cannot be list. Please double check the fields.'])
+        flash('Venue' + request.form['name'] +
+                                     ' cannot be list. Please double check the fields.')
         return render_template('forms/new_venue.html', form=form)
 
 
@@ -475,14 +473,42 @@ def create_artist_form():
 @app.route('/artists/create', methods=['POST'])
 def create_artist_submission():
     # called upon submitting the new artist listing form
-    # TODO: insert form data as a new Venue record in the db, instead
-    # TODO: modify data to be the data object returned from db insertion
+    form = ArtistForm(request.form)
+    error = False
 
-    # on successful db insert, flash success
-    flash('Artist ' + request.form['name'] + ' was successfully listed!')
-    # TODO: on unsuccessful db insert, flash an error instead.
-    # e.g., flash('An error occurred. Artist ' + data.name + ' could not be listed.')
-    return render_template('pages/home.html')
+    if form.validate():
+        try:
+            newArtist = Artist(
+                name=request.form['name'],
+                city=request.form['city'],
+                state=request.form['state'],
+                phone=request.form['phone'],
+                genres=request.form.getlist('genres'),
+                image_link=request.form['image_link'],
+                facebook_link=request.form['facebook_link'],
+                website=request.form['website'],
+                seeking_venue=request.form['seeking_venue'] == 'Yes',
+                seeking_description=request.form['seeking_description']
+            )
+            db.session.add(newArtist)
+            db.session.commit()
+            flash('Artist ' + request.form['name'] + ' has been created!')
+        except SQLAlchemyError as e:
+            error = True
+            db.session.rollback()
+        finally:
+            db.session.close()
+        if error:
+            flash('An ' + e + ' error occurred. Venue ' +
+                  data.name + ' could not be listed.')
+            return render_template('forms/new_artist.html', form=form)
+        else:
+            return render_template('pages/home.html')
+    else:
+        print(form.errors)
+        flash('Artist ' + request.form['name'] +
+                                     ' cannot be listed. Please double check the fields.')
+        return render_template('forms/new_artist.html', form=form)
 
 
 #  Shows
