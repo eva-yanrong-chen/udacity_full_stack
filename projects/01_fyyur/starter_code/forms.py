@@ -1,10 +1,11 @@
 from datetime import datetime
 from flask_wtf import Form
 from wtforms import StringField, SelectField, SelectMultipleField, DateTimeField
-from wtforms.validators import DataRequired, AnyOf, URL, Optional
-
+from wtforms.validators import DataRequired, AnyOf, URL, Optional, ValidationError
+from app import Artist, Venue
 
 class ShowForm(Form):
+
     artist_id = StringField(
         'artist_id', validators=[DataRequired()]
     )
@@ -16,6 +17,22 @@ class ShowForm(Form):
         validators=[DataRequired()],
         default=datetime.today()
     )
+
+    def validate_artist_id(self, artist_id):
+        ids = []
+        for artist in Artist.query.all():
+            ids.append(artist.id)
+        # print("Artist id is: " + artist)
+        if int(artist_id.data) not in ids:
+            raise ValidationError('That artist does not exist.')
+    
+    def validate_venue_id(self, venue_id):
+        ids = []
+        for venue in Venue.query.all():
+            ids.append(venue.id)
+        # print("Venue id is: " + artist)
+        if int(venue_id.data) not in ids:
+            raise ValidationError('That venue does not exist.')
 
 
 class VenueForm(Form):
@@ -91,7 +108,6 @@ class VenueForm(Form):
         'image_link', validators=[URL(), Optional()]
     )
     genres = SelectMultipleField(
-        # TODO implement enum restriction
         'genres', validators=[DataRequired()],
         choices=[
             ('Alternative', 'Alternative'),
@@ -198,14 +214,12 @@ class ArtistForm(Form):
         ]
     )
     phone = StringField(
-        # TODO implement validation logic for state
         'phone'
     )
     image_link = StringField(
         'image_link'
     )
     genres = SelectMultipleField(
-        # TODO implement enum restriction
         'genres', validators=[DataRequired()],
         choices=[
             ('Alternative', 'Alternative'),
@@ -230,7 +244,6 @@ class ArtistForm(Form):
         ]
     )
     facebook_link = StringField(
-        # TODO implement enum restriction
         'facebook_link', validators=[URL(), Optional()]
     )
     website = StringField(

@@ -256,12 +256,22 @@ def create_venue_submission():
 
 @app.route('/venues/<venue_id>', methods=['DELETE'])
 def delete_venue(venue_id):
-    # TODO: Complete this endpoint for taking a venue_id, and using
+    # Complete this endpoint for taking a venue_id, and using
     # SQLAlchemy ORM to delete a record. Handle cases where the session commit could fail.
+    try:
+        venue = Venue.query.filter_by(id=venue_id).one()
+        db.session.delete(venue)
+        db.session.commit()
+    except:
+        db.session.rollback()       
+    finally:
+        db.session.close()
 
-    # BONUS CHALLENGE: Implement a button to delete a Venue on a Venue Page, have it so that
+    # TODO: Implement a button to delete a Venue on a Venue Page, have it so that
     # clicking that button delete it from the db then redirect the user to the homepage
-    return None
+
+    print("DELETE")
+    return render_template('pages/home.html')
 
 #  Artists
 #  ----------------------------------------------------------------
@@ -320,7 +330,6 @@ def show_artist(artist_id):
             "past_shows_count": Show.query.filter_by(artist_id=artist.id).filter(Show.start_time < datetime.now()).count(),
             "upcoming_shows_count": Show.query.filter_by(artist_id=artist.id).filter(Show.start_time >= datetime.now()).count(),
         }
-        print(artistDic["genres"])
         #BUG artist genres are printing weird
         shows = Show.query.filter_by(artist_id=artist.id).all()
         for show in shows:
@@ -479,7 +488,6 @@ def create_shows():
 
 
 @app.route('/shows/create', methods=['POST'])
-#TODO implement id constraint
 def create_show_submission():
     form = ShowForm(request.form)
     error = False
@@ -508,10 +516,8 @@ def create_show_submission():
         else:
             return render_template('pages/home.html')
     else:
-        print(form.errors)
-        flash('Show cannot be listed. Please check all the fields.')
+        flash('Artist or Venue id does not exist. Please check all the fields.')
         return render_template('forms/new_show.html', form=form)
-    
 
 @app.errorhandler(404)
 def not_found_error(error):
