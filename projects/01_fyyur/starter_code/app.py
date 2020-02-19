@@ -317,11 +317,10 @@ def search_artists():
 @app.route('/artists/<int:artist_id>')
 def show_artist(artist_id):
     # shows the artist page with the given artist_id
-
     data = []
 
     artists = Artist.query.all()
-
+    print(Artist.query)
     for artist in artists:
         artistDic = {
             "id": artist.id,
@@ -364,7 +363,6 @@ def edit_artist(artist_id):
     artist = db.session.query(Artist).filter_by(id=artist_id).one()
     # BUG can't populate select fields with default values
     return render_template('forms/edit_artist.html', form=form, artist=artist)
-    # TODO add remaining fields to the form and update them
 
 
 @app.route('/artists/<int:artist_id>/edit', methods=['POST'])
@@ -373,20 +371,22 @@ def edit_artist_submission(artist_id):
     # artist record with ID <artist_id> using the new attributes
     form = ArtistForm()
     try:
-        artist = db.session.query(Artist).filter_by(id=artist_id).one()
+        artist = Artist.query.filter_by(id=artist_id).one()
         artist.name = request.form['name'],
         artist.image_link = request.form['image_link'],
         artist.city = request.form['city'],
         artist.state = request.form['state'],
         artist.phone = request.form['phone'],
         artist.genres = request.form.getlist('genres'),
-        artist.seeking_venue = request.form['seeking_venue'],
+        # artist.seeking_venue = request.form['seeking_venue'] == 'Yes',
         artist.seeking_description = request.form['seeking_description'],
         artist.facebook_link = request.form['facebook_link'],
         artist.website = request.form['website']
         db.session.commit()
-    except:
+    except RuntimeError as e:
         db.session.rollback()
+        print("ERROR!!!")
+        print(e)
     finally:
         db.session.close()
     return redirect(url_for('show_artist', artist_id=artist_id))
@@ -407,6 +407,7 @@ def edit_venue_submission(venue_id):
 
     try:
         venue = db.session.query(Venue).filter_by(id=venue_id).one()
+        print(venue)
         venue.name = request.form['name'],
         vanue.image_link = request.form['image_link'],
         venue.city = request.form['city'],
@@ -414,7 +415,7 @@ def edit_venue_submission(venue_id):
         venue.address = request.form['address'],
         venue.phone = request.form['phone'],
         venue.genres = request.form.getlist('genres'),
-        venue.seeking_talent = request.form['seeking_talent'],
+        venue.seeking_talent = request.form['seeking_talent'] == 'Yes',
         venue.seeking_description = request.form['seeking_description'],
         venue.facebook_link = request.form['facebook_link'],
         venue.website = request.form['website']

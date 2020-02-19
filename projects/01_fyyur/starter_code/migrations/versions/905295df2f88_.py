@@ -22,7 +22,7 @@ def upgrade():
                     existing_type=sa.VARCHAR(length=120),
                     nullable=False)
     op.alter_column('artist', 'genres',
-                    existing_type=sa.VARCHAR(length=120),
+                    existing_type=postgresql.ARRAY(sa.VARCHAR()),
                     nullable=False)
     op.alter_column('artist', 'name',
                     existing_type=sa.VARCHAR(),
@@ -84,7 +84,7 @@ def downgrade():
                     existing_type=sa.VARCHAR(),
                     nullable=True)
     op.alter_column('artist', 'genres',
-                    existing_type=sa.VARCHAR(length=120),
+                    existing_type=postgresql.ARRAY(sa.VARCHAR()),
                     nullable=True)
     op.alter_column('artist', 'city',
                     existing_type=sa.VARCHAR(length=120),
