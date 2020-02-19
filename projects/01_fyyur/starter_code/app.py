@@ -38,15 +38,20 @@ def isPast(datetime):
 # Models.
 #----------------------------------------------------------------------------#
 
+
 class Show(db.Model):
     __tablename__ = 'show'
 
-    venue_id = db.Column(db.Integer, db.ForeignKey('venue.id'), primary_key=True)
-    artist_id = db.Column(db.Integer, db.ForeignKey('artist.id'), primary_key=True)
-    start_time = db.Column(db.DateTime, nullable=False, default=datetime.now, primary_key=True)
+    venue_id = db.Column(db.Integer, db.ForeignKey(
+        'venue.id'), primary_key=True)
+    artist_id = db.Column(db.Integer, db.ForeignKey(
+        'artist.id'), primary_key=True)
+    start_time = db.Column(db.DateTime, nullable=False,
+                           default=datetime.now, primary_key=True)
 
     def __repr__(self):
         return f'<Show: Venue {self.venue_id} & Artist {self.artist_id} starts @ {self.start_time}>'
+
 
 class Venue(db.Model):
     __tablename__ = 'venue'
@@ -68,6 +73,7 @@ class Venue(db.Model):
 
     def __repr__(self):
         return f'<Venue {self.id}: {self.name} @ {self.city}>'
+
 
 class Artist(db.Model):
     __tablename__ = 'artist'
@@ -116,6 +122,7 @@ def index():
 #  Venues
 #  ----------------------------------------------------------------
 
+
 @app.route('/venues')
 def venues():
     #   num_shows should be aggregated based on number of upcoming shows per venue.
@@ -125,10 +132,10 @@ def venues():
     for city in cities:
         exampleVenue = Venue.query.filter_by(city=city).first()
         cityDic = {"city": exampleVenue.city,
-            "state": exampleVenue.state,
-            "venues": []
-        }
-        venues = Venue.query.filter_by(city = city).all()
+                   "state": exampleVenue.state,
+                   "venues": []
+                   }
+        venues = Venue.query.filter_by(city=city).all()
         for venue in venues:
             venueDic = {
                 "id": venue.id,
@@ -149,7 +156,8 @@ def search_venues():
         "data": []
     }
     search_term = request.form['search_term']
-    venues = db.session.query(Venue).filter(Venue.name.ilike('%' + search_term + '%')).all()
+    venues = db.session.query(Venue).filter(
+        Venue.name.ilike('%' + search_term + '%')).all()
     for venue in venues:
         venueDic = {
             "id": venue.id,
@@ -157,7 +165,7 @@ def search_venues():
             "num_upcoming_shows": Show.query.filter_by(venue_id=venue.id).count()
         }
         response['data'].append(venueDic)
-        response['count']+=1
+        response['count'] += 1
     return render_template('pages/search_venues.html', results=response, search_term=request.form.get('search_term', ''))
 
 
@@ -184,7 +192,6 @@ def show_venue(venue_id):
             "past_shows_count": Show.query.filter_by(venue_id=venue.id).filter(Show.start_time < datetime.now()).count(),
             "upcoming_shows_count": Show.query.filter_by(venue_id=venue.id).filter(Show.start_time >= datetime.now()).count(),
         }
-        print(venueDic["genres"])
         shows = Show.query.filter_by(venue_id=venue.id).all()
         for show in shows:
             artist = Artist.query.filter_by(id=show.artist_id).one()
@@ -250,7 +257,7 @@ def create_venue_submission():
             return render_template('pages/home.html')
     else:
         flash('Venue' + request.form['name'] +
-                                     ' cannot be list. Please double check the fields.')
+              ' cannot be list. Please double check the fields.')
         return render_template('forms/new_venue.html', form=form)
 
 
@@ -263,7 +270,7 @@ def delete_venue(venue_id):
         db.session.delete(venue)
         db.session.commit()
     except:
-        db.session.rollback()       
+        db.session.rollback()
     finally:
         db.session.close()
 
@@ -310,8 +317,8 @@ def search_artists():
 @app.route('/artists/<int:artist_id>')
 def show_artist(artist_id):
     # shows the artist page with the given artist_id
-   
-    data=[]
+
+    data = []
 
     artists = Artist.query.all()
 
@@ -330,7 +337,7 @@ def show_artist(artist_id):
             "past_shows_count": Show.query.filter_by(artist_id=artist.id).filter(Show.start_time < datetime.now()).count(),
             "upcoming_shows_count": Show.query.filter_by(artist_id=artist.id).filter(Show.start_time >= datetime.now()).count(),
         }
-        #BUG artist genres are printing weird
+        # BUG artist genres are printing weird
         shows = Show.query.filter_by(artist_id=artist.id).all()
         for show in shows:
             venue = Venue.query.filter_by(id=show.venue_id).one()
@@ -359,6 +366,7 @@ def edit_artist(artist_id):
     return render_template('forms/edit_artist.html', form=form, artist=artist)
     # TODO add remaining fields to the form and update them
 
+
 @app.route('/artists/<int:artist_id>/edit', methods=['POST'])
 def edit_artist_submission(artist_id):
     # take values from the form submitted, and update existing
@@ -367,11 +375,15 @@ def edit_artist_submission(artist_id):
     try:
         artist = db.session.query(Artist).filter_by(id=artist_id).one()
         artist.name = request.form['name'],
+        artist.image_link = request.form['image_link'],
         artist.city = request.form['city'],
         artist.state = request.form['state'],
         artist.phone = request.form['phone'],
         artist.genres = request.form.getlist('genres'),
-        artist.facebook_link = request.form['facebook_link']
+        artist.seeking_venue = request.form['seeking_venue'],
+        artist.seeking_description = request.form['seeking_description'],
+        artist.facebook_link = request.form['facebook_link'],
+        artist.website = request.form['website']
         db.session.commit()
     except:
         db.session.rollback()
@@ -396,11 +408,16 @@ def edit_venue_submission(venue_id):
     try:
         venue = db.session.query(Venue).filter_by(id=venue_id).one()
         venue.name = request.form['name'],
+        vanue.image_link = request.form['image_link'],
         venue.city = request.form['city'],
         venue.state = request.form['state'],
+        venue.address = request.form['address'],
         venue.phone = request.form['phone'],
         venue.genres = request.form.getlist('genres'),
-        venue.facebook_link = request.form['facebook_link']
+        venue.seeking_talent = request.form['seeking_talent'],
+        venue.seeking_description = request.form['seeking_description'],
+        venue.facebook_link = request.form['facebook_link'],
+        venue.website = request.form['website']
         db.session.commit()
     except:
         db.session.rollback()
@@ -455,7 +472,7 @@ def create_artist_submission():
     else:
         print(form.errors)
         flash('Artist ' + request.form['name'] +
-                                     ' cannot be listed. Please double check the fields.')
+              ' cannot be listed. Please double check the fields.')
         return render_template('forms/new_artist.html', form=form)
 
 
@@ -471,9 +488,9 @@ def shows():
     for show in shows:
         showDic = {
             "venue_id": show.venue_id,
-            "venue_name": Venue.query.filter_by(id = show.venue_id).first().name,
+            "venue_name": Venue.query.filter_by(id=show.venue_id).first().name,
             "artist_id": show.artist_id,
-            "artist_image_link": Artist.query.filter_by(id = show.artist_id).first().image_link,
+            "artist_image_link": Artist.query.filter_by(id=show.artist_id).first().image_link,
             "start_time": format_datetime(show.start_time.strftime("%Y-%m-%d, %H:%M:%S"))
         }
         data.append(showDic)
@@ -496,8 +513,8 @@ def create_show_submission():
         try:
             start_time_string = request.form['start_time']
             newShow = Show(
-                venue_id = request.form['venue_id'],
-                artist_id = request.form['artist_id'],
+                venue_id=request.form['venue_id'],
+                artist_id=request.form['artist_id'],
                 start_time=datetime.strptime(
                     start_time_string, '%Y-%m-%d %H:%M:%S')
             )
@@ -518,6 +535,7 @@ def create_show_submission():
     else:
         flash('Artist or Venue id does not exist. Please check all the fields.')
         return render_template('forms/new_show.html', form=form)
+
 
 @app.errorhandler(404)
 def not_found_error(error):
@@ -554,5 +572,3 @@ if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port)
 '''
-
-
