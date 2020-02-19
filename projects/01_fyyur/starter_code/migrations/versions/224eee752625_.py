@@ -25,7 +25,7 @@ def upgrade():
                               server_default=sa.func.current_timestamp()),
                     sa.ForeignKeyConstraint(['artist_id'], ['artist.id'], ),
                     sa.ForeignKeyConstraint(['venue_id'], ['venue.id'], ),
-                    sa.PrimaryKeyConstraint('venue_id', 'artist_id')
+                    sa.PrimaryKeyConstraint('venue_id', 'artist_id', 'start_time')
                     )
     op.add_column('artist', sa.Column(
         'seeking_description', sa.String(), nullable=True))
