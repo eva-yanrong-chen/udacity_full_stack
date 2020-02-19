@@ -336,7 +336,6 @@ def show_artist(artist_id):
             "past_shows_count": Show.query.filter_by(artist_id=artist.id).filter(Show.start_time < datetime.now()).count(),
             "upcoming_shows_count": Show.query.filter_by(artist_id=artist.id).filter(Show.start_time >= datetime.now()).count(),
         }
-        # BUG artist genres are printing weird
         shows = Show.query.filter_by(artist_id=artist.id).all()
         for show in shows:
             venue = Venue.query.filter_by(id=show.venue_id).one()
