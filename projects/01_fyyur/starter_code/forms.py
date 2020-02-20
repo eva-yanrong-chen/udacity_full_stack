@@ -2,7 +2,7 @@ from datetime import datetime
 from flask_wtf import Form
 from wtforms import StringField, SelectField, SelectMultipleField, DateTimeField
 from wtforms.validators import DataRequired, AnyOf, URL, Optional, ValidationError
-from app import Artist, Venue
+from app import db
 
 class ShowForm(Form):
 
@@ -20,7 +20,7 @@ class ShowForm(Form):
 
     def validate_artist_id(self, artist_id):
         ids = []
-        for artist in Artist.query.all():
+        for artist in db.session.query(Artist).all():
             ids.append(artist.id)
         # print("Artist id is: " + artist)
         if int(artist_id.data) not in ids:
@@ -28,7 +28,7 @@ class ShowForm(Form):
     
     def validate_venue_id(self, venue_id):
         ids = []
-        for venue in Venue.query.all():
+        for venue in db.session.query(Venue).all():
             ids.append(venue.id)
         # print("Venue id is: " + artist)
         if int(venue_id.data) not in ids:
