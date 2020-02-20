@@ -192,7 +192,8 @@ def show_venue(venue_id):
             "past_shows_count": Show.query.filter_by(venue_id=venue.id).filter(Show.start_time < datetime.now()).count(),
             "upcoming_shows_count": Show.query.filter_by(venue_id=venue.id).filter(Show.start_time >= datetime.now()).count(),
         }
-        shows = Show.query.filter_by(venue_id=venue.id).all()
+ 
+        shows = Show.query.join(Venue, Show.venue_id == venue.id).all()
         for show in shows:
             artist = Artist.query.filter_by(id=show.artist_id).one()
             showDic = {
