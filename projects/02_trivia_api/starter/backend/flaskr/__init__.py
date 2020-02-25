@@ -103,7 +103,8 @@ def create_app(test_config=None):
     try:
       question = Question.query.get(question_id).delete()
       return jsonify({'success': True})
-    except:
+    except Exception as error:
+      print("\nerror => {}\n".format(error))
       abort(422)
 
   '''
@@ -115,28 +116,7 @@ def create_app(test_config=None):
   the form will clear and the question will appear at the end of the last page
   of the questions list in the "List" tab.  
   '''
-  @app.route('/questions', methods=['POST'])
-  def create_question():
-    body = request.get_json()
-    
-    question = body['question']
-    answer = body['answer']
-    difficulty = body['difficulty']
-    category = int(body['category'])
-
-    try:
-      newQuestion = Question(question, answer, difficulty, category)
-      newQuestion.insert()
-
-      return jsonify({
-        'success': True,
-        'question_created': newQuestion.format()
-      })
-    except:
-      abort(422)
-
-  '''
-  @TODO: 
+  ''' 
   Create a POST endpoint to get questions based on a search term. 
   It should return any questions for whom the search term 
   is a substring of the question. 
@@ -145,6 +125,38 @@ def create_app(test_config=None):
   only question that include that string within their question. 
   Try using the word "title" to start. 
   '''
+  @app.route('/questions', methods=['POST'])
+  def create_question():
+    body = request.get_json()
+    searchTerm = body.get('searchTerm', None)
+    question = body.get('question', None)
+    answer = body.get('answer', None)
+    difficulty = body.get('difficulty', None)
+    category = body.get('category', None)
+
+    try:
+      if searchTerm:
+        questions = Question.query.filter(Question.question.ilike(f'%{searchTerm}%')).all()
+        current_questions = paginate_questions(request, questions)
+
+        return jsonify({
+          'success': True,
+          'questions': current_questions,
+          'total_questions': len(current_questions)
+        })
+
+      else:
+        newQuestion = Question(question, answer, difficulty, category)
+        newQuestion.insert()
+
+        return jsonify({
+          'success': True,
+          'question_created': newQuestion.format()
+        })
+    except Exception as error:
+      print("\nerror => {}\n".format(error))
+      abort(422)
+
 
   '''
   @TODO: 
