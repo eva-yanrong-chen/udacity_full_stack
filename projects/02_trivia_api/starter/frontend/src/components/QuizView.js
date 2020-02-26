@@ -130,9 +130,17 @@ class QuizView extends Component {
     )
   }
 
+  /*
+  BUG: Since the correct answer is split into words as elements of the array, the only way to get 
+  correct answer is to complete answer one of the words contained in the answer. 
+  Ex: Alexander Fleming
+    Alexander Fleming - Wrong
+    Alexander - Correct
+    Fleming - Correct
+  */
   evaluateAnswer = () => {
     const formatGuess = this.state.guess.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g,"").toLowerCase()
-    const answerArray = this.state.currentQuestion.answer.toLowerCase().split(' ');
+    const answerArray = this.state.currentQuestion.answer.toLowerCase().split(" ");
     return answerArray.includes(formatGuess)
   }
 

@@ -40,7 +40,6 @@ def create_app(test_config=None):
       return response
 
   '''
-  @TODO: 
   Create an endpoint to handle GET requests 
   for all available categories.
   '''
@@ -159,14 +158,22 @@ def create_app(test_config=None):
 
 
   '''
-  @TODO: 
   Create a GET endpoint to get questions based on category. 
 
   TEST: In the "List" tab / main screen, clicking on one of the 
   categories in the left column will cause only questions of that 
   category to be shown. 
   '''
+  @app.route('/categories/<int:category_id>/questions')
+  def get_questions_by_category(category_id):
+    questions = Question.query.filter_by(category=category_id).all()
+    current_questions = paginate_questions(request, questions)
 
+    return jsonify({
+        'success': True,
+        'questions': current_questions,
+        'total_questions': len(current_questions)
+    })
 
   '''
   @TODO: 
@@ -179,12 +186,70 @@ def create_app(test_config=None):
   one question at a time is displayed, the user is allowed to answer
   and shown whether they were correct or not. 
   '''
+  @app.route('/quizzes', methods=['POST'])
+  def create_quiz():
+    body = request.get_json()
+    previous_questions = body.get('previous_questions')
+    quiz_category = body.get('quiz_category')
+    category_id = quiz_category['id']
+    
+    try:
+      if category_id == 0:
+        questions = Question.query.all()
+      else:
+        questions = Question.query.filter_by(category=category_id).all()
+      
+      if len(questions) == 0:
+        abort(404)
+
+      formatted_questions = [question.format() for question in questions]
+
+      print('previous questions', previous_questions)
+
+      possible_questions = []
+      for q in formatted_questions:
+        if q['id'] not in previous_questions:
+          possible_questions.append(q)
+
+      if len(possible_questions) == 0:
+        return jsonify({
+          'success': True
+        })
+
+      next_question = random.choice(possible_questions)
+
+      previous_questions.append(next_question)
+
+      return jsonify({
+        'success': True,
+        'question': next_question,
+        'previous_questions': previous_questions,
+        'quizCategory': quiz_category
+      })
+    
+    except Exception as error:
+      print("\nerror => {}\n".format(error))
+      abort(422)
 
   '''
-  @TODO: 
   Create error handlers for all expected errors 
   including 404 and 422. 
   '''
+  @app.errorhandler(404)
+  def not_found(error):
+    return jsonify({
+      "success": False,
+      "error": 404,
+      "message": "resource not found"
+    }), 404
+
+  @app.errorhandler(422)
+  def unprocessable(error):
+    return jsonify({
+        "success": False,
+        "error": 422,
+        "message": "unprocessable"
+    }), 422
   
   return app
 
