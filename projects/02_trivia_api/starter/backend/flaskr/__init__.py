@@ -101,7 +101,11 @@ def create_app(test_config=None):
   def delete_question(question_id):
     try:
       question = Question.query.get(question_id).delete()
-      return jsonify({'success': True})
+      return jsonify({
+        'success': True,
+        'deleted': question_id,
+        'total_questions': len(Question.query.all())
+        })
     except Exception as error:
       print("\nerror => {}\n".format(error))
       abort(422)
@@ -176,7 +180,6 @@ def create_app(test_config=None):
     })
 
   '''
-  @TODO: 
   Create a POST endpoint to get questions to play the quiz. 
   This endpoint should take category and previous question parameters 
   and return a random questions within the given category, 
