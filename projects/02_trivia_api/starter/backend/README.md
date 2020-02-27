@@ -98,7 +98,7 @@ DELETE ...
 **GET '/questions**
 - Fetches a dictionary of categories and a paginated dictionary of questions
 - Request Arguments: None
-- Returns: A categories object, a list of questions, success, total_questions
+- Returns: A categories object, a list of questions that are paginated to 10 questions per page, success, total_questions
 
 ```
 {
@@ -184,6 +184,116 @@ DELETE ...
   ], 
   "success": true, 
   "total_questions": 14
+}
+```
+
+**DELETE '/questions/<int:question_id>'**
+- Deletes the questions that matches the question_id from the database
+- Request Argument: None
+- Returns: success, deleted question id, total # of questions
+
+```
+{
+  'success': True,
+  'deleted': 2,
+  'total_questions': 14
+
+}
+```
+
+**POST '/questions'**
+- If the argument body contains 'searchTerm', this endpiont returns a list of questions that contains the searchTerm
+- Example: `curl http://127.0.0.1:5000/questions -X POST -H "Content-Type: application/json" -d '{"searchTerm":"boxer"}'
+- Return: 
+```
+{
+  "questions": [
+    {
+      "answer": "Muhammad Ali", 
+      "category": 4, 
+      "difficulty": 1, 
+      "id": 9, 
+      "question": "What boxer's original name is Cassius Clay?"
+    }
+  ], 
+  "success": true, 
+  "total_questions": 1
+}
+```
+
+- If the argumentbody doesn't contain 'searchTerm', then this endpiont creates a new question object and insert it into the question table
+- Example: `curl http://127.0.0.1:5000/questions -X POST -H "Content-Type: application/json" -d '{"question":"What is the largest continent?", "answer":"Asia", "category":"2", "difficulty":"1"}'`
+- Return:
+```
+{
+  "question_created": {
+    "answer": "Asia", 
+    "category": 1, 
+    "difficulty": 2, 
+    "id": 25, 
+    "question": "What is the largest continent?"
+  }, 
+  "success": true
+}
+```
+
+**GET '/categories/<int: category_id>/questions**
+- Fetch a list of question paginated to 10 questions per page under the category
+- Request Arguments: None
+- Return: list of questions, success, total_questions under the category
+- Example: `curl http://127.0.0.1:5000/categories/2/questions`
+
+```
+{
+  "questions": [
+    {
+      "answer": "Escher", 
+      "category": 2, 
+      "difficulty": 1, 
+      "id": 16, 
+      "question": "Which Dutch graphic artist\u2013initials M C was a creator of optical illusions?"
+    }, 
+    {
+      "answer": "Mona Lisa", 
+      "category": 2, 
+      "difficulty": 3, 
+      "id": 17, 
+      "question": "La Giaconda is better known as what?"
+    }, 
+    {
+      "answer": "One", 
+      "category": 2, 
+      "difficulty": 4, 
+      "id": 18, 
+      "question": "How many paintings did Van Gogh sell in his lifetime?"
+    }, 
+    {
+      "answer": "Jackson Pollock", 
+      "category": 2, 
+      "difficulty": 2, 
+      "id": 19, 
+      "question": "Which American artist was a pioneer of Abstract Expressionism, and a leading exponent of action painting?"
+    }
+  ], 
+  "success": true, 
+  "total_questions": 4
+}
+```
+
+**POST '/quizzes'**
+- Takes a category and returns a a random questions within the given category
+- Example: `curl http://127.0.0.1:5000/questions -X POST -H "Content-Type: application/json" -d '{"previous_questions":"[]", "quiz_category": {"type":"science", "id":"1"}}'`
+
+```
+{
+  "question_created": {
+    "answer": null, 
+    "category": null, 
+    "difficulty": null, 
+    "id": 27, 
+    "question": null
+  }, 
+  "success": true
 }
 ```
 
