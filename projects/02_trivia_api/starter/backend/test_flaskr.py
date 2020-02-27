@@ -70,6 +70,7 @@ class TriviaTestCase(unittest.TestCase):
         self.assertTrue(data['total_questions'])
         self.assertTrue(len(data['questions']))
 
+    # One of the testcase for an unsuccessful behavior
     def test_get_paginated_questions_does_not_exist(self):
         res = self.client().get('/questions?page=100')
         data = json.loads(res.data)
