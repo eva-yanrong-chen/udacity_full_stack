@@ -70,6 +70,8 @@ The `--reload` flag will detect file changes and restart the server automaticall
     - Manager
         - can perform all actions
 7. Test your endpoints with [Postman](https://getpostman.com). 
+    - Login URL for auth0: 	https://dev-zuj7kdfn.auth0.com/authorize?audience=coffee&response_type=token&client_id=58Hj8vGe76sL1kl0goardBK3I0jqJZHz&redirect_uri=http://localhost:5000/
+    - Logout URL for auth0: https://dev-zuj7kdfn.auth0.com/v2/logout?returnTo=http://localhost:5000/&client_id=58Hj8vGe76sL1kl0goardBK3I0jqJZHz&_ga=2.268880881.1888072507.1583341439-2112101465.1582839414
     - Register 2 users - assign the Barista role to one and Manager role to the other.
     - Sign into each account and make note of the JWT.
     - Import the postman collection `./starter_code/backend/udacity-fsnd-udaspicelatte.postman_collection.json`
