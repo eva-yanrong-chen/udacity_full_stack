@@ -14,6 +14,8 @@ API_AUDIENCE = 'coffee'
 AuthError Exception
 A standardized way to communicate auth failure modes
 '''
+
+
 class AuthError(Exception):
     def __init__(self, error, status_code):
         self.error = error
@@ -33,12 +35,12 @@ class AuthError(Exception):
 def get_token_auth_header():
    
     auth = request.headers.get('Authorization', None)
-
     if not auth:
         raise AuthError({
             'code': 'authorization_header_missing',
             'description': 'Authorization header is expected.'
-        }, 401)       
+        }, 401)
+
     parts = auth.split()
     if parts[0].lower() != 'bearer':
         raise AuthError({
@@ -83,7 +85,7 @@ def check_permissions(permission, payload):
         raise AuthError({
             'code': 'unauthorized',
             'description': 'Permission not found.'
-        }, 403)
+        }, 401)
     return True
 
 '''
@@ -168,11 +170,14 @@ def requires_auth(permission=''):
     def requires_auth_decorator(f):
         @wraps(f)
         def wrapper(*args, **kwargs):
-            jwt = get_token_off_header()
+            jwt = get_token_auth_header()
             try:
                 payload = verify_decode_jwt(jwt)
             except:
-                abort(401)
+                raise AuthError({
+                    'code': 'unverified jwt',
+                    'description': 'Unable to verify jwt token'
+                }, 401)
 
             check_permissions(permission, payload)
 
